@@ -65,6 +65,59 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       ));
     });
 
+    /// при перемещении касания по экрану
+    on<PanUpdateEvent>((event, emit) {
+      ueInterface?.sendMessageToStreamer('MouseMove',
+        [65535, 65535, event.dx*100, event.dy*100]
+      );
+    });
+
+    /// при повороте экрана
+    on<NewDimensionsEvent>((event, emit) {
+      ueInterface?.sendMessageToStreamer("Command", {
+        "Resolution.Width": event.width.toInt(),
+        "Resolution.Height": event.height.toInt()
+      });
+    });
+
+    /// отработать сигнал перемещения
+    on<MoveEvent>((event, emit) {
+      // todo: отдебажить (определить сектора, иначе сейчас он только по диагонали бегает)
+      if(event.x > 0){
+        /// key arrow left - 39
+        ueInterface?.sendMessageToStreamer("KeyDown", [39, false]);
+        ueInterface?.sendMessageToStreamer("KeyUp", [37]);
+      } else {
+        /// key arrow right - 37
+        ueInterface?.sendMessageToStreamer("KeyDown", [37, false]);
+        ueInterface?.sendMessageToStreamer("KeyUp", [39]);
+      }
+      if(event.y > 0){
+        /// key arrow up - 38
+        ueInterface?.sendMessageToStreamer("KeyDown", [38, false]);
+        ueInterface?.sendMessageToStreamer("KeyUp", [40]);
+      } else {
+        /// key arrow down - 40
+        ueInterface?.sendMessageToStreamer("KeyUp", [38]);
+        ueInterface?.sendMessageToStreamer("KeyDown", [40, false]);
+      }
+    });
+
+    /// прекратить движение (отпустить джойстик)
+    on<StopMoveEvent>((event, emit) {
+      ueInterface?.sendMessageToStreamer("KeyUp", [37]);
+      ueInterface?.sendMessageToStreamer("KeyUp", [38]);
+      ueInterface?.sendMessageToStreamer("KeyUp", [39]);
+      ueInterface?.sendMessageToStreamer("KeyUp", [40]);
+    });
+
+    on<JumpEvent>((event, emit) {
+      ueInterface?.sendMessageToStreamer("KeyDown", [32, false]);
+      Future.delayed(const Duration(milliseconds: 20), (){
+        ueInterface?.sendMessageToStreamer("KeyUp", [32]);
+      });
+    });
+
     ueInterface = UePixelClient(
         screenWidth: screenWidth,
         screenHeight: screenHeight,

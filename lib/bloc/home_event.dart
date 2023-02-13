@@ -53,3 +53,52 @@ class ToMenuEvent extends HomeEvent {
   @override
   List<Object?> get props => [];
 }
+
+/// событие, вызываемое при обновлении перемещении касания по экрану
+class PanUpdateEvent extends HomeEvent {
+  final double dx;
+  final double dy;
+
+  const PanUpdateEvent(this.dx, this.dy);
+
+  @override
+  List<Object?> get props => [dx, dy];
+}
+
+/// вызывается с UI при повороте экрана
+class NewDimensionsEvent extends HomeEvent {
+  final double width;
+  final double height;
+
+  const NewDimensionsEvent(this.width, this.height);
+
+  @override
+  List<Object?> get props => [width, height];
+}
+
+/// вызывается с UI для перемещений
+class MoveEvent extends HomeEvent {
+  final num x;
+  final num y;
+
+  const MoveEvent(this.x, this.y);
+
+  @override
+  List<Object?> get props => [x, y];
+}
+
+/// release joystick
+class StopMoveEvent extends HomeEvent {
+  const StopMoveEvent();
+
+  @override
+  List<Object?> get props => [];
+}
+
+/// jump )))
+class JumpEvent extends HomeEvent {
+  const JumpEvent();
+
+  @override
+  List<Object?> get props => [];
+}

@@ -1,24 +1,4 @@
-
-enum UEProtocolStructure {
-  int16,
-  uint8,
-  uint16,
-  double,
-}
-
-class ToStreamerMessage {
-  final int code;
-  final int byteLength;
-  final List<UEProtocolStructure> structure;
-
-  ToStreamerMessage({
-    required this.code,
-    required this.byteLength,
-    required this.structure,
-  });
-
-  // TODO: implement to bytes method
-}
+import 'models/to_streamer_message.dart';
 
 /// массив списан с app.js signallingWebServer, который предоставляет unreal
 Map<String, ToStreamerMessage> toStreamerMessages = {
@@ -74,11 +54,13 @@ Map<String, ToStreamerMessage> toStreamerMessages = {
     code: 50,
     byteLength: 0,
     structure: [],
+    mode: UEMessageMode.json,
   ),
   "Command": ToStreamerMessage(
     code: 51,
     byteLength: 0,
     structure: [],
+    mode: UEMessageMode.json,
   ),
 
   /// Keyboard Input Message. Range = 60..69.
@@ -94,7 +76,7 @@ Map<String, ToStreamerMessage> toStreamerMessages = {
       code: 61,
       byteLength: 1,
       structure: [
-        UEProtocolStructure.uint8 // key code
+        UEProtocolStructure.uint8, // key code
       ]
   ),
   "KeyPress": ToStreamerMessage(

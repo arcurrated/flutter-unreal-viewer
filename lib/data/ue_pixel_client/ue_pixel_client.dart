@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'to_streamer_messages.dart';
 
-/// todo: implement full-codes protocol support with additional parameters (key, value, structure)
 /// todo: implement method sendMessageToStreamer associated with protocol description
 
 class UePixelClient {
@@ -87,10 +87,10 @@ class UePixelClient {
           /// чтобы работали команды, при запуске сцены добавить флаг
           /// -AllowPixelStreamingCommands=true
           /// остальные коды можно увидеть в коде .js файлов SignallingServer
-          emitDescriptor({
+          sendMessageToStreamer("Command", {
             "Resolution.Width": screenWidth,
             "Resolution.Height": screenHeight
-          }, 51);
+          });
         };
 
         peerConnection!.onTrack = (RTCTrackEvent event) {
@@ -163,34 +163,17 @@ class UePixelClient {
   /// и кастомно их обработать на стороне дижка
   void emitUIInteraction(Map<String, dynamic> data) {
     /// код UIInteraction - 50 (специфика Unreal Engine)
-    emitDescriptor(data, 50);
+    sendToChannel(toStreamerMessages['UIInteraction']!.toBytes(data));
   }
-  
-  /// метод необходим для передачи JSON информации по WebRTC каналу (сцене)
-  /// алгоритм задан unrealEngine (специфика)
-  void emitDescriptor(Map<String, dynamic> _sendObj, int eventCode){
-    String _sendStr = jsonEncode(_sendObj);
 
-    ByteData data = ByteData(3 + 2*_sendStr.length);
-
-    int counter = 0;
-    /// в первый байт устанавливаем код команды
-    data.setUint8(counter, eventCode);
-    counter += 1;
-
-    /// во следующие два байта записываем длину сообщения
-    data.setUint16(counter, _sendStr.length, Endian.little);
-    counter += 2;
-
-    /// далее каждый символ преобразуем в число (код символа) и занимаем
-    /// каждые следующие два байта
-    for(int i = 0; i < _sendStr.length; i++){
-      data.setUint16(counter, _sendStr.codeUnitAt(i), Endian.little);
-      counter += 2;
+  void sendMessageToStreamer(String messageType, dynamic inData){
+    if(toStreamerMessages[messageType] == null){
+      print('No such messageType: $messageType');
+      return;
     }
-
-    /// отправляем
-    sendToChannel(data);
+    sendToChannel(
+      toStreamerMessages[messageType]!.toBytes(inData ?? [])
+    );
   }
 
   /// generic-метод для отправки двоичных данных сцене

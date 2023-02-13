@@ -1,17 +1,31 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_unreal_viewer/view/joystick_widget.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../bloc/home_bloc.dart';
 import '../models/models.dart';
+import 'dart:ui';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatelessWidget with WidgetsBindingObserver {
   HomePage({Key? key}) : super(key: key);
 
   final _hostPortController = TextEditingController();
 
+  /// хук для изменения разрешения стрима
+  Function(double, double)? onChangeMetrics;
+
+  @override void didChangeMetrics() {
+    /// если такой хук есть
+    if(onChangeMetrics != null){
+      /// вызвать хук для изменения размера стрима
+      onChangeMetrics!(window.physicalSize.width, window.physicalSize.height);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addObserver(this);
     /// calc screen dimensions for correct view
     double ratio = MediaQuery.of(context).devicePixelRatio;
     double height = MediaQuery.of(context).size.height * ratio;
@@ -24,10 +38,26 @@ class HomePage extends StatelessWidget {
         },
         child: BlocBuilder<HomeBloc, HomeState>(
           builder: (context, state){
+            /// установить хук для изменения разрешения стрима
+            onChangeMetrics = (double width, double height){
+              context.read<HomeBloc>().add(NewDimensionsEvent(width, height));
+            };
             return Stack(
                 children: [
                   Container(
-                      child: RTCVideoView(state.remoteRenderer)
+                      color: Colors.black54,
+                      child: GestureDetector(
+                          onPanUpdate: (details) {
+                            context.read<HomeBloc>().add(PanUpdateEvent(
+                              details.delta.dx,
+                              details.delta.dy
+                            ));
+                          },
+                          onTap: (){
+                            context.read<HomeBloc>().add(const JumpEvent());
+                          },
+                          child: RTCVideoView(state.remoteRenderer)
+                      )
                   ),
                   state.status != HomePageStatus.loaded ? Container(
                     color: Colors.black.withOpacity(0.6),
@@ -113,7 +143,16 @@ class HomePage extends StatelessWidget {
                           )
                         ),
                       )
-                    )
+                    ),
+                  Positioned(
+                    bottom: 10,
+                    left: 10,
+                    child: Joystick(onMove: (num x, num y){
+                      context.read<HomeBloc>().add(MoveEvent(x, y));
+                    }, stopMove: (){
+                      context.read<HomeBloc>().add(const StopMoveEvent());
+                    },)
+                  )
                 ],
               );
           },
