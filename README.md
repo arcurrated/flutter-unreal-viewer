@@ -1,5 +1,7 @@
 # flutter_unreal_viewer
 
+![alt text](https://github.com/arcurrated/flutter-unreal-viewer/blob/main/screenshots/im1.jpeg?raw=true)
+
 Flutter-приложение, предназначенное для отображения данных, генерируемых на стороне Unreal Engine
 сцены. Поставку картинки обеспечивает протокол WebRTC, установление связи через который происходит
 через signallingServer.
