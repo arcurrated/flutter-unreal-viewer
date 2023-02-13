@@ -4,8 +4,7 @@ import 'dart:typed_data';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
-/// код UIInteraction (специфика Unreal Engine)
-const int DEFAULT_EVENT_CODE = 50;
+/// todo: implement full toStreamerMessages support (key, value, structure)
 
 class UePixelClient {
   /// signalling
@@ -158,6 +157,14 @@ class UePixelClient {
     channel?.sink.close();
   }
 
+  /// метод, предназначеный для отправки UIInteraction на unrealEngine
+  /// именно через этот метод можно отправить кастомные данные
+  /// и кастомно их обработать на стороне дижка
+  void emitUIInteraction(Map<String, dynamic> data) {
+    /// код UIInteraction - 50 (специфика Unreal Engine)
+    sendToChannel(data, 50);
+  }
+  
   /// метод необходим для передачи информации по WebRTC каналу (сцене)
   /// алгоритм задан unrealEngine (специфика)
   void sendToChannel(Map<String, dynamic> _sendObj, int eventCode){
