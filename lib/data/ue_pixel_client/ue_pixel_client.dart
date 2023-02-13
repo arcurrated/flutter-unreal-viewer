@@ -4,7 +4,8 @@ import 'dart:typed_data';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
-/// todo: implement full toStreamerMessages support (key, value, structure)
+/// todo: implement full-codes protocol support with additional parameters (key, value, structure)
+/// todo: implement method sendMessageToStreamer associated with protocol description
 
 class UePixelClient {
   /// signalling
@@ -86,7 +87,7 @@ class UePixelClient {
           /// чтобы работали команды, при запуске сцены добавить флаг
           /// -AllowPixelStreamingCommands=true
           /// остальные коды можно увидеть в коде .js файлов SignallingServer
-          sendToChannel({
+          emitDescriptor({
             "Resolution.Width": screenWidth,
             "Resolution.Height": screenHeight
           }, 51);
@@ -162,15 +163,12 @@ class UePixelClient {
   /// и кастомно их обработать на стороне дижка
   void emitUIInteraction(Map<String, dynamic> data) {
     /// код UIInteraction - 50 (специфика Unreal Engine)
-    sendToChannel(data, 50);
+    emitDescriptor(data, 50);
   }
   
-  /// метод необходим для передачи информации по WebRTC каналу (сцене)
+  /// метод необходим для передачи JSON информации по WebRTC каналу (сцене)
   /// алгоритм задан unrealEngine (специфика)
-  void sendToChannel(Map<String, dynamic> _sendObj, int eventCode){
-    if(dataChannel == null){
-      return;
-    }
+  void emitDescriptor(Map<String, dynamic> _sendObj, int eventCode){
     String _sendStr = jsonEncode(_sendObj);
 
     ByteData data = ByteData(3 + 2*_sendStr.length);
@@ -192,8 +190,19 @@ class UePixelClient {
     }
 
     /// отправляем
+    sendToChannel(data);
+  }
+
+  /// generic-метод для отправки двоичных данных сцене
+  /// нужен, так как на нем заканчиваются два режима отправки данных
+  /// (JSON и строго запротоколированный)
+  sendToChannel(ByteData data){
+    if(dataChannel == null){
+      return;
+    }
+
     dataChannel!.send(RTCDataChannelMessage.fromBinary(
-        data.buffer.asUint8List()
+      data.buffer.asUint8List()
     ));
   }
 }
