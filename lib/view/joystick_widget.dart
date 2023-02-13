@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class Joystick extends StatefulWidget {
@@ -33,15 +35,28 @@ class _JoystickState extends State<Joystick> {
     return GestureDetector(
       onPanUpdate: (data){
         setState(() {
-          /// TODO: implement correct TG processing
           if((data.localPosition.dx - mainR/2)*(data.localPosition.dx - mainR/2)
-              + (data.localPosition.dy - mainR/2)*(data.localPosition.dy - mainR/2) <= maxDist*maxDist){
+              + (data.localPosition.dy - mainR/2)*(data.localPosition.dy - mainR/2) > maxDist*maxDist) {
+            /// fix on maxR
+
+            /// вычисляем дельты расстояний от центра окружности
+            num dx = data.localPosition.dx - mainR/2;
+            num dy = data.localPosition.dy - mainR/2;
+
+            /// рассчитываем фактическое расстояние от центра
+            /// для последующего корректного получения пропорциональности
+            num factDist = sqrt(dx*dx + dy*dy);
+
+            /// вычисляем пропорциональные дельты и преобразуем обратно
+            /// в координаты прямоугольника Positioned
+            currentX = (dx/factDist * (mainR/2 - secR/2) + (mainR/2)).toInt();
+            currentY = (dy/factDist * (mainR/2 - secR/2) + (mainR/2)).toInt();
+          } else {
             currentX = (data.localPosition.dx).toInt();
             currentY = (data.localPosition.dy).toInt();
-
-            /// hooooook
-            widget.onMove(currentX - mainR/2, mainR/2 - currentY);
           }
+          /// hooooook
+          widget.onMove(currentX - mainR/2, mainR/2 - currentY);
         });
       },
       onPanEnd: (data){
