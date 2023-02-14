@@ -82,24 +82,87 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     /// отработать сигнал перемещения
     on<MoveEvent>((event, emit) {
-      // todo: отдебажить (определить сектора, иначе сейчас он только по диагонали бегает)
-      if(event.x > 0){
-        /// key arrow left - 39
-        ueInterface?.sendMessageToStreamer("KeyDown", [39, false]);
-        ueInterface?.sendMessageToStreamer("KeyUp", [37]);
+      Map<String, bool> arrowMap = {
+        'up': false,
+        'down': false,
+        'left': false,
+        'right': false,
+      };
+
+      /// разделить джойстик на 8 секторов
+      /// (верх, право-верх, право, право-низ, низ, лево-низ, лево, лево-верх)
+      /// и в зависимости от этого "зажимать" стрелочки клавиатуры
+      num tg = event.x == 0 ? 100 : event.y/event.x;
+      if(event.y >= 0){
+        if(tg.abs() > 2.4){
+          // top
+          arrowMap['up'] = true;
+        } else if (tg.abs() < 0.4) {
+          // side sector
+          if(event.x > 0){
+            arrowMap['right']  = true;
+          } else {
+            arrowMap['left'] = true;
+          }
+        } else {
+          // top left and top right
+          if(tg > 0){
+            arrowMap['right']  = true;
+            arrowMap['up']  = true;
+          } else {
+            arrowMap['left']  = true;
+            arrowMap['up']  = true;
+          }
+        }
       } else {
-        /// key arrow right - 37
-        ueInterface?.sendMessageToStreamer("KeyDown", [37, false]);
+        if(tg.abs() > 2.4){
+          // bot sector
+          arrowMap['down']  = true;
+        } else if (tg.abs() < 0.4) {
+          // side sector
+          if(event.x > 0){
+            arrowMap['right']  = true;
+          } else {
+            arrowMap['left']  = true;
+          }
+        } else {
+          // bot left and bot right
+          if(tg > 0){
+            arrowMap['down']  = true;
+            arrowMap['left']  = true;
+          } else {
+            arrowMap['down']  = true;
+            arrowMap['right']  = true;
+          }
+        }
+      }
+
+      /// key arrow up - 38
+      if(arrowMap['up'] == true){
+        ueInterface?.sendMessageToStreamer("KeyDown", [38, false]);
+      } else {
+        ueInterface?.sendMessageToStreamer("KeyUp", [38]);
+      }
+
+      /// key arrow down - 40
+      if(arrowMap['down'] == true){
+        ueInterface?.sendMessageToStreamer("KeyDown", [40, false]);
+      } else {
+        ueInterface?.sendMessageToStreamer("KeyUp", [40]);
+      }
+
+      /// key arrow left - 39
+      if(arrowMap['left'] == true){
+        ueInterface?.sendMessageToStreamer("KeyDown", [39, false]);
+      } else {
         ueInterface?.sendMessageToStreamer("KeyUp", [39]);
       }
-      if(event.y > 0){
-        /// key arrow up - 38
-        ueInterface?.sendMessageToStreamer("KeyDown", [38, false]);
-        ueInterface?.sendMessageToStreamer("KeyUp", [40]);
+
+      /// key arrow right - 37
+      if(arrowMap['right'] == true){
+        ueInterface?.sendMessageToStreamer("KeyDown", [37, false]);
       } else {
-        /// key arrow down - 40
-        ueInterface?.sendMessageToStreamer("KeyUp", [38]);
-        ueInterface?.sendMessageToStreamer("KeyDown", [40, false]);
+        ueInterface?.sendMessageToStreamer("KeyUp", [37]);
       }
     });
 

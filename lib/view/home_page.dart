@@ -144,15 +144,15 @@ class HomePage extends StatelessWidget with WidgetsBindingObserver {
                         ),
                       )
                     ),
-                  Positioned(
-                    bottom: 10,
-                    left: 10,
+                  state.status == HomePageStatus.loaded ? Positioned(
+                    bottom: 20,
+                    left: 20,
                     child: Joystick(onMove: (num x, num y){
                       context.read<HomeBloc>().add(MoveEvent(x, y));
                     }, stopMove: (){
                       context.read<HomeBloc>().add(const StopMoveEvent());
                     },)
-                  )
+                  ) : const SizedBox(),
                 ],
               );
           },
